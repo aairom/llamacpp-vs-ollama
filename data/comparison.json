@@ -1,0 +1,549 @@
+{
+  "meta": {
+    "last_updated": "2025-07",
+    "sources": [
+      {
+        "id": "llamacpp-github",
+        "label": "llama.cpp GitHub (ggml-org)",
+        "url": "https://github.com/ggml-org/llama.cpp"
+      },
+      {
+        "id": "ollama-github",
+        "label": "Ollama GitHub",
+        "url": "https://github.com/ollama/ollama"
+      },
+      {
+        "id": "ollama-docs",
+        "label": "Ollama Official Documentation",
+        "url": "https://docs.ollama.com"
+      },
+      {
+        "id": "ollama-api-docs",
+        "label": "Ollama API Docs",
+        "url": "https://docs.ollama.com/api"
+      },
+      {
+        "id": "ollama-openai-compat",
+        "label": "Ollama OpenAI Compatibility Docs",
+        "url": "https://docs.ollama.com/api/openai-compatibility"
+      },
+      {
+        "id": "llamacpp-add-model",
+        "label": "llama.cpp — How to Add a Model",
+        "url": "https://github.com/ggml-org/llama.cpp/blob/master/docs/development/HOWTO-add-model.md"
+      },
+      {
+        "id": "llamacpp-backends",
+        "label": "llama.cpp Backend Table",
+        "url": "https://github.com/ggml-org/llama.cpp/blob/master/docs/ops.md"
+      },
+      {
+        "id": "picovoice-comparison",
+        "label": "Picovoice: llama.cpp vs Ollama for Enterprises",
+        "url": "https://picovoice.ai/blog/local-llms-llamacpp-ollama/"
+      },
+      {
+        "id": "d-central-comparison",
+        "label": "D-Central: LM Studio vs Ollama vs llama.cpp",
+        "url": "https://d-central.tech/lmstudio-vs-ollama-vs-llamacpp/"
+      },
+      {
+        "id": "llmbestpractices",
+        "label": "LLM Best Practices: Ollama vs llama.cpp",
+        "url": "https://llmbestpractices.com/comparisons/ollama-vs-llamacpp"
+      },
+      {
+        "id": "geerlingguy-benchmarks",
+        "label": "Jeff Geerling AI Benchmarks",
+        "url": "https://github.com/geerlingguy/ai-benchmarks"
+      },
+      {
+        "id": "ollama-license-issue",
+        "label": "Ollama License Attribution Issue (GitHub #3185)",
+        "url": "https://github.com/ollama/ollama/issues/3185"
+      },
+      {
+        "id": "ollama-pr-15122",
+        "label": "Ollama: Switch to llama-server exclusively (PR #15122)",
+        "url": "https://github.com/ollama/ollama/pull/15122"
+      },
+      {
+        "id": "llamacpp-release-cycle",
+        "label": "llama.cpp Release Cycle Discussion",
+        "url": "https://github.com/ggml-org/llama.cpp/discussions/16111"
+      }
+    ]
+  },
+  "tools": {
+    "llamacpp": {
+      "name": "llama.cpp",
+      "tagline": "LLM inference in C/C++",
+      "homepage": "https://llama.app",
+      "github": "https://github.com/ggml-org/llama.cpp",
+      "created": "March 2023",
+      "created_by": "Georgi Gerganov",
+      "maintained_by": "ggml-org community (100+ maintainers)",
+      "language": "C / C++",
+      "color": "#4a90d9"
+    },
+    "ollama": {
+      "name": "Ollama",
+      "tagline": "Get up and running with large language models",
+      "homepage": "https://ollama.com",
+      "github": "https://github.com/ollama/ollama",
+      "created": "June 2023",
+      "created_by": "Jeffrey Morgan & Michael Chiang",
+      "maintained_by": "Ollama Inc.",
+      "language": "Go (wraps llama.cpp / llama-server)",
+      "color": "#48bb78"
+    }
+  },
+  "community": {
+    "llamacpp": {
+      "github_stars": "~123k",
+      "github_forks": "~21.5k",
+      "contributors": "2000+",
+      "open_issues": "~2000",
+      "release_cadence": "Rolling — multiple releases per week (no formal stable track yet)",
+      "notable_community_tools": [
+        "llama-cpp-python (Python bindings)",
+        "llama-cpp-agent",
+        "LM Studio (built on llama.cpp)",
+        "Jan AI",
+        "text-generation-webui",
+        "koboldcpp"
+      ],
+      "sources": ["llamacpp-github", "llamacpp-release-cycle"]
+    },
+    "ollama": {
+      "github_stars": "~178k",
+      "github_forks": "~17.3k",
+      "contributors": "500+",
+      "open_issues": "~3600",
+      "release_cadence": "Structured versioned releases (e.g. v0.32.8), typically bi-weekly",
+      "notable_community_tools": [
+        "Open WebUI",
+        "Dify",
+        "Langchain Ollama integration",
+        "LlamaIndex Ollama integration",
+        "Obsidian Ollama plugin",
+        "Continue.dev",
+        "Cline"
+      ],
+      "sources": ["ollama-github"]
+    }
+  },
+  "categories": [
+    {
+      "id": "architecture",
+      "label": "Architecture & Design",
+      "icon": "🏗️",
+      "description": "How each tool is built internally, its core design philosophy, and its fundamental model of operation.",
+      "llamacpp": {
+        "summary": "Pure C/C++ inference library with no external dependencies. Built on the ggml tensor library. Ships as a static/dynamic library (libllama) plus CLI tools (llama-cli, llama-server). Can be embedded directly into other applications.",
+        "details": [
+          "Built on top of the ggml tensor computation library",
+          "Zero mandatory external dependencies — compiles on virtually any C++ toolchain",
+          "Ships multiple tools: llama-cli (interactive), llama-server (HTTP server), llama-bench, llama-imatrix, llama-quantize, and more",
+          "Library-first design: link libllama.so/libllama.a into your own app",
+          "No daemon, no background process — run on demand",
+          "CPU-first with progressive GPU offloading",
+          "Supports multimodal models via libmtmd",
+          "Built-in web UI in llama-server"
+        ],
+        "verdict": "advantage",
+        "sources": ["llamacpp-github", "llamacpp-add-model", "d-central-comparison"]
+      },
+      "ollama": {
+        "summary": "Go application wrapping llama.cpp (via llama-server). Runs as a background daemon on port 11434. Provides a model registry, a CLI, and an HTTP API. From PR #15122 onwards, delegates all GGUF inference to an upstream llama-server binary.",
+        "details": [
+          "Written in Go; wraps llama.cpp as its core inference engine",
+          "Runs as a persistent background daemon (launchd on macOS, systemd on Linux, service on Windows)",
+          "Exposes HTTP API on localhost:11434",
+          "Manages model lifecycle: download, cache, load/unload",
+          "As of 2025 PR #15122: uses upstream llama-server binary for all GGUF models",
+          "Additional MLX engine for Safetensor-based models on Apple Silicon",
+          "Modelfile system for customising system prompts, templates, and parameters",
+          "Model registry at registry.ollama.ai"
+        ],
+        "verdict": "neutral",
+        "sources": ["ollama-github", "ollama-pr-15122", "d-central-comparison"]
+      }
+    },
+    {
+      "id": "openness",
+      "label": "Openness & Extensibility",
+      "icon": "🔓",
+      "description": "License, source accessibility, ability to fork/modify, plugin systems, and how much the tool lets you customize its internals.",
+      "llamacpp": {
+        "summary": "MIT licensed, fully open-source. Every aspect of inference is exposed: kernels, quantization routines, sampling algorithms, tensor backends. You can modify, embed, redistribute, or build commercial products on top without restriction.",
+        "details": [
+          "MIT License — maximum permissiveness",
+          "All source code on GitHub, including every backend and kernel",
+          "Documented process to add new model architectures (HOWTO-add-model.md)",
+          "Documented process to add new hardware backends",
+          "C API (llama.h) for integration into any language via FFI",
+          "Python bindings via llama-cpp-python, Rust via llama-cpp-rs, Swift via swift-llama",
+          "Every inference parameter is exposed as CLI flag or API option",
+          "GGUF format is open and documented; tools to convert HuggingFace models included"
+        ],
+        "verdict": "advantage",
+        "sources": ["llamacpp-github", "llamacpp-add-model", "llmbestpractices"]
+      },
+      "ollama": {
+        "summary": "MIT licensed as a project. However, Ollama intentionally abstracts away llama.cpp internals. Users interact with a curated Modelfile API; the raw inference flags are hidden. Ollama Inc. controls the model registry and release cadence.",
+        "details": [
+          "MIT License on the Ollama repository",
+          "Source is available on GitHub",
+          "Does NOT expose llama.cpp's raw inference flags to end users",
+          "Model registry is controlled by Ollama Inc. — not community-run",
+          "Modelfile offers limited customisation (FROM, PARAMETER, SYSTEM, TEMPLATE, ADAPTER)",
+          "No documented plugin or backend extension system",
+          "llama.cpp attribution controversy: 411+ days before responding to license compliance issue (#3185)",
+          "Ollama Inc. is a VC-backed company — commercial incentives may diverge from community",
+          "Cannot easily swap or override the inference engine"
+        ],
+        "verdict": "limited",
+        "sources": ["ollama-github", "ollama-license-issue", "d-central-comparison", "llmbestpractices"]
+      }
+    },
+    {
+      "id": "model_support",
+      "label": "Model Support",
+      "icon": "🧠",
+      "description": "Which model formats, architectures, and quantization levels are supported by each tool.",
+      "llamacpp": {
+        "summary": "GGUF is the native format. Supports 100+ model architectures. Full quantization control from 1.5-bit to 16-bit. Conversion scripts for HuggingFace SafeTensors included. New models typically land within days of release.",
+        "details": [
+          "Native format: GGUF (llama.cpp created and owns this format)",
+          "Quantization: Q2_K, Q3_K_S/M/L, Q4_0, Q4_K_S/M, Q5_0, Q5_K_S/M, Q6_K, Q8_0, F16, BF16, IQ1, IQ2, IQ3, IQ4 families",
+          "1.5-bit to 8-bit integer quantization + float types",
+          "100+ supported model architectures: LLaMA, Mistral, Mixtral, Phi, Gemma, Qwen, Command-R, Grok, BERT, Falcon, BLOOM, and many more",
+          "Multimodal: LLaVA, MiniCPM-V, BakLLaVA, InternVL, Qwen-VL, Gemma-3 multimodal",
+          "Embedding models: BERT, nomic-embed, E5",
+          "Convert HuggingFace models with included convert_hf_to_gguf.py",
+          "Split GGUF support for very large models across multiple files"
+        ],
+        "verdict": "advantage",
+        "sources": ["llamacpp-github", "llamacpp-add-model"]
+      },
+      "ollama": {
+        "summary": "Uses GGUF via its model registry. Supports a curated subset of popular models. New architectures depend on Ollama maintainers updating their runner (typically 2–10 day lag). Users can import any local GGUF via Modelfile.",
+        "details": [
+          "Format: GGUF (via llama-server internally)",
+          "Safetensor models via MLX engine on Apple Silicon",
+          "Model registry: 200+ pre-packaged models at ollama.com/library",
+          "Quantization choices limited to what Ollama pre-packages (typically Q4_K_M, Q5_K_M, Q8_0)",
+          "Import any GGUF from disk: `ollama create mymodel -f Modelfile` with `FROM /path/to/model.gguf`",
+          "Import GGUF from HuggingFace: `ollama pull hf.co/org/model`",
+          "Support for new architectures typically lags llama.cpp by days to weeks",
+          "Modelfile ADAPTER directive for LoRA adapters"
+        ],
+        "verdict": "neutral",
+        "sources": ["ollama-github", "ollama-docs", "d-central-comparison"]
+      }
+    },
+    {
+      "id": "api",
+      "label": "API & Integration",
+      "icon": "🔌",
+      "description": "REST API surface, OpenAI compatibility, native library bindings, and how other software integrates with each tool.",
+      "llamacpp": {
+        "summary": "llama-server exposes an OpenAI-compatible REST API plus additional llama.cpp-specific endpoints. Also provides a full C/C++ library API (llama.h) and Python bindings. Full control over every sampling parameter.",
+        "details": [
+          "OpenAI-compatible: /v1/chat/completions, /v1/completions, /v1/embeddings, /v1/models",
+          "llama.cpp-specific: /completion, /tokenize, /detokenize, /embedding, /health, /slots",
+          "Native C API via llama.h — usable from any language via FFI",
+          "Python: llama-cpp-python (llama_cpp.Llama class, OpenAI-compatible server)",
+          "Rust: llama-cpp-rs",
+          "Swift: swift-llama",
+          "Java: llama.java",
+          "Sampling parameters: temperature, top-p, top-k, min-p, mirostat, tail-free sampling, typical-p, repeat penalty, frequency penalty, presence penalty",
+          "Grammar-based structured output (GBNF grammars)",
+          "JSON schema structured output",
+          "Tool calling / function calling support",
+          "Batch inference support via /v1/completions or server slots"
+        ],
+        "verdict": "advantage",
+        "sources": ["llamacpp-github", "llmbestpractices"]
+      },
+      "ollama": {
+        "summary": "Clean REST API on port 11434. OpenAI-compatible endpoints for most common operations. Also provides native Ollama-specific endpoints (chat, generate, embed, pull, push, create). Excellent ecosystem integration (LangChain, LlamaIndex, OpenAI SDK).",
+        "details": [
+          "Ollama native API: POST /api/generate, POST /api/chat, POST /api/embed, GET /api/tags, POST /api/pull, POST /api/push, POST /api/create, POST /api/show",
+          "OpenAI-compatible: /v1/chat/completions, /v1/completions, /v1/embeddings, /v1/models, /v1/responses",
+          "Streaming supported on all generation endpoints",
+          "Logprobs NOT supported (as of 2025)",
+          "Multi-model in-process: can serve embedding + chat model simultaneously",
+          "Official SDKs: Python (ollama-python), JavaScript (ollama-js)",
+          "Integrates out-of-the-box with: LangChain, LlamaIndex, Dify, Open WebUI, Continue.dev, Cline, AnythingLLM",
+          "NOT a library — cannot embed inside another process; requires daemon"
+        ],
+        "verdict": "neutral",
+        "sources": ["ollama-api-docs", "ollama-openai-compat", "llmbestpractices"]
+      }
+    },
+    {
+      "id": "hardware",
+      "label": "Hardware Backends",
+      "icon": "⚡",
+      "description": "Which hardware accelerators and compute backends are supported, and how easy they are to use.",
+      "llamacpp": {
+        "summary": "16+ hardware backends covering virtually every modern compute platform. First-class support for Apple Silicon (Metal), NVIDIA (CUDA), AMD (HIP/ROCm), Intel (SYCL, OpenVINO), Vulkan (cross-platform), and more.",
+        "details": [
+          "BLAS / BLIS — CPU general matrix multiply, all platforms",
+          "CUDA — NVIDIA GPU (custom kernels)",
+          "HIP — AMD GPU via ROCm",
+          "Metal — Apple Silicon GPU (first-class citizen)",
+          "Vulkan — Cross-platform GPU (AMD, Intel, Qualcomm, etc.)",
+          "SYCL — Intel GPU (Arc, Iris Xe)",
+          "OpenCL — Qualcomm Adreno GPU (mobile)",
+          "CANN — Huawei Ascend NPU",
+          "MUSA — Moore Threads GPU",
+          "OpenVINO — Intel CPU/GPU/NPU (in progress)",
+          "Hexagon — Qualcomm Snapdragon DSP (in progress)",
+          "IBM zDNN — IBM Z & LinuxONE",
+          "ZenDNN — AMD CPU (Zen architecture)",
+          "WebGPU — Browser/WASM context",
+          "RPC — Distributed inference across network",
+          "CPU+GPU hybrid — offload any percentage of layers to GPU",
+          "Vulkan was supported years before Ollama added it (e.g. Vulkan support since 2023; Ollama added ~2025)"
+        ],
+        "verdict": "advantage",
+        "sources": ["llamacpp-github", "geerlingguy-benchmarks"]
+      },
+      "ollama": {
+        "summary": "Supports Metal (macOS), CUDA (NVIDIA), and ROCm (AMD). As of 2025, Vulkan added. Hardware detection is automatic on install. Fewer exotic backends than llama.cpp. Windows ROCm requires recent driver versions.",
+        "details": [
+          "Metal — Apple Silicon (auto-detected on macOS)",
+          "CUDA — NVIDIA GPU (auto-detected, bundled driver integration)",
+          "ROCm / HIP — AMD GPU (Linux only; Windows requires recent drivers as of 2025)",
+          "Vulkan — added in recent versions (was delayed vs. llama.cpp by ~2 years)",
+          "CPU fallback — always available",
+          "Hardware detection is automatic — no build flags needed",
+          "No SYCL, CANN, OpenCL, IBM zDNN, or other exotic backends",
+          "GPU layer auto-distribution across multiple GPUs in recent versions",
+          "Less control over hybrid CPU/GPU layer split than llama.cpp"
+        ],
+        "verdict": "limited",
+        "sources": ["ollama-github", "geerlingguy-benchmarks", "d-central-comparison"]
+      }
+    },
+    {
+      "id": "performance",
+      "label": "Performance & Benchmarks",
+      "icon": "📊",
+      "description": "Inference speed, memory efficiency, throughput, and real-world benchmark data.",
+      "llamacpp": {
+        "summary": "Maximum performance when properly tuned. Exposes every performance lever: batch size, thread count, GPU layer count, context management, mmap/mlock, quantization choice. Consistently benchmarks at or near peak hardware capability.",
+        "details": [
+          "Full control: --threads, --n-gpu-layers, --batch-size, --ubatch-size, --mmap, --mlock, --flash-attn",
+          "IQ quantization family (IQ1-IQ4) for extreme compression with quality preservation",
+          "AVX/AVX2/AVX512/AMX instruction set optimizations for Intel/AMD x86",
+          "ARM NEON and RISC-V vector extensions for mobile/ARM",
+          "Custom CUDA kernels — not relying on generic cuBLAS",
+          "Flash Attention support (--flash-attn flag)",
+          "KV cache quantization (--cache-type-k, --cache-type-v)",
+          "Batched inference (--parallel) for multi-request throughput",
+          "Benchmarks (RTX 4090): ~334 tokens/s on LLaMA 3.2:3b (llama.cpp raw)",
+          "Speculative decoding support for faster generation"
+        ],
+        "verdict": "advantage",
+        "sources": ["llamacpp-github", "geerlingguy-benchmarks", "llmbestpractices"]
+      },
+      "ollama": {
+        "summary": "Very good performance out of the box with sensible defaults. Since delegating to llama-server (PR #15122), the raw inference speed gap with llama.cpp has narrowed significantly. Cannot match hand-tuned llama.cpp at high concurrency or exotic hardware.",
+        "details": [
+          "Comparable single-request inference speed to llama.cpp since adopting llama-server",
+          "Automatic GPU utilization — no tuning needed for typical use cases",
+          "Multi-model in-memory management: hot-swaps models based on demand",
+          "Context window managed per Modelfile (num_ctx parameter)",
+          "Limited concurrency tuning (OLLAMA_NUM_PARALLEL env var)",
+          "Cannot set raw llama.cpp flags like --flash-attn, --ubatch-size per request",
+          "Memory management handled automatically — less predictable under load",
+          "Benchmarks at parity with llama.cpp for simple single-request workloads",
+          "Performance gap becomes visible at 50+ QPS or with exotic quantization"
+        ],
+        "verdict": "neutral",
+        "sources": ["ollama-pr-15122", "geerlingguy-benchmarks", "llmbestpractices"]
+      }
+    },
+    {
+      "id": "configuration",
+      "label": "Configuration & Control",
+      "icon": "🎛️",
+      "description": "Granularity of control over sampling, generation, context, and runtime parameters.",
+      "llamacpp": {
+        "summary": "Maximum control. Every sampling algorithm, context parameter, rope scaling factor, KV cache setting, and hardware tuning knob is directly accessible via CLI flags or API parameters.",
+        "details": [
+          "40+ CLI flags for generation and sampling control",
+          "Sampling: temperature, top-p, top-k, min-p, mirostat (v1/v2), typical-p, tail-free sampling",
+          "Repetition: repeat-penalty, repeat-last-n, frequency-penalty, presence-penalty",
+          "Context: --ctx-size, --rope-freq-base, --rope-freq-scale, YaRN RoPE scaling",
+          "Memory: --mmap, --mlock, --cache-type-k, --cache-type-v, --cache-reuse",
+          "Execution: --threads, --threads-batch, --batch-size, --ubatch-size, --flash-attn",
+          "Multi-GPU: --tensor-split, --split-mode (layer, row, none), --main-gpu",
+          "Grammar-constrained output with GBNF grammar files",
+          "System prompt, chat template, and BOS/EOS token override",
+          "Slot-based API for multi-user concurrent sessions"
+        ],
+        "verdict": "advantage",
+        "sources": ["llamacpp-github", "llmbestpractices"]
+      },
+      "ollama": {
+        "summary": "Convenient but constrained. Parameters accessible via Modelfile PARAMETER directives or API 'options' object. Key llama.cpp-specific flags (RoPE scaling, KV cache type, per-request thread count) are not exposed.",
+        "details": [
+          "Modelfile PARAMETER: num_ctx, temperature, top_p, top_k, repeat_penalty, seed, stop, num_predict, num_gpu, num_thread, mirostat, mirostat_eta, mirostat_tau, tfs_z, typical_p",
+          "API 'options' object mirrors Modelfile parameters",
+          "Cannot set per-request rope scaling or YaRN parameters",
+          "No KV cache type override (--cache-type-k/v hidden)",
+          "No --flash-attn flag exposed",
+          "No per-request ubatch-size or batch-size",
+          "Context size change requires creating a new Modelfile variant",
+          "keep_alive parameter controls how long model stays in memory",
+          "OLLAMA_NUM_PARALLEL, OLLAMA_MAX_LOADED_MODELS env vars for server-level tuning"
+        ],
+        "verdict": "limited",
+        "sources": ["ollama-api-docs", "llmbestpractices"]
+      }
+    },
+    {
+      "id": "deployment",
+      "label": "Deployment Flexibility",
+      "icon": "🚀",
+      "description": "How each tool can be deployed: embedded, server mode, CLI, Docker, mobile, production environments.",
+      "llamacpp": {
+        "summary": "Maximum deployment flexibility. Can be compiled for any target with a C++ toolchain: desktop, server, mobile (Android, iOS), embedded, and browser (WebAssembly). Library mode enables embedding into existing binaries.",
+        "details": [
+          "Library mode: link libllama into any application",
+          "CLI mode: llama-cli for interactive or batch inference",
+          "Server mode: llama-server provides OpenAI-compatible HTTP API",
+          "Docker: official images (full/light/server variants)",
+          "Android: documented build process, termux support",
+          "iOS/macOS: XCFramework for Swift integration",
+          "Browser: WebGPU/WASM port",
+          "Production: single static binary llama-server, easy to containerize",
+          "RPC backend: distribute inference across multiple machines",
+          "No runtime dependency — ships as a standalone binary"
+        ],
+        "verdict": "advantage",
+        "sources": ["llamacpp-github", "d-central-comparison"]
+      },
+      "ollama": {
+        "summary": "Excellent for server/desktop deployment. Signed installers for macOS/Linux/Windows. Runs as a system service. Docker image available. Not suitable for embedded use (requires Go runtime, daemon architecture).",
+        "details": [
+          "macOS: DMG installer, auto-starts as launchd service",
+          "Linux: install script, systemd service, available in some package managers",
+          "Windows: EXE installer, runs as Windows service",
+          "Docker: official docker image (ollama/ollama)",
+          "Kubernetes: community Helm charts available",
+          "NOT embeddable as a library — requires daemon architecture",
+          "NOT suitable for mobile or browser deployment",
+          "REST API enables polyglot clients (any language can call it)",
+          "Remote access: set OLLAMA_HOST=0.0.0.0 to expose on network",
+          "Multi-model server: handles multiple concurrent model requests"
+        ],
+        "verdict": "neutral",
+        "sources": ["ollama-github", "llmbestpractices"]
+      }
+    },
+    {
+      "id": "ecosystem",
+      "label": "Community & Ecosystem",
+      "icon": "🌐",
+      "description": "GitHub stars, contributor count, release cadence, and the ecosystem of tools built on top.",
+      "llamacpp": {
+        "summary": "The foundational infrastructure of the local LLM world. Nearly every local inference tool (Ollama, LM Studio, Jan AI, text-generation-webui, koboldcpp) is built on llama.cpp. 2000+ contributors, weekly releases, extremely active development.",
+        "details": [
+          "~123k GitHub stars, ~21.5k forks",
+          "2000+ total contributors",
+          "~78 commits per week (as of mid-2025)",
+          "Rolling releases — multiple per week, no formal stable track",
+          "Foundation for: Ollama, LM Studio, Jan AI, koboldcpp, text-generation-webui, and more",
+          "Georgi Gerganov (lead) is extremely responsive in issues and PRs",
+          "Weekly changelog via GitHub releases",
+          "Active discussions forum on GitHub",
+          "GGUF format co-created with community and widely adopted"
+        ],
+        "verdict": "advantage",
+        "sources": ["llamacpp-github", "llamacpp-release-cycle", "d-central-comparison"]
+      },
+      "ollama": {
+        "summary": "Most starred local LLM project on GitHub (~178k). Large user community drawn by ease of use. Ecosystem of UI wrappers (Open WebUI) and framework integrations. Corporate-backed but active. New model support sometimes lags llama.cpp.",
+        "details": [
+          "~178k GitHub stars, ~17.3k forks",
+          "500+ contributors (more concentrated on core team)",
+          "Structured versioned releases (e.g. v0.32.8)",
+          "Backed by Ollama Inc. (VC-funded)",
+          "Official SDKs: Python and JavaScript",
+          "Major integrations: LangChain, LlamaIndex, Open WebUI, Dify, AnythingLLM, Continue.dev, Cline, Cursor",
+          "Ollama model library with 200+ pre-packaged models",
+          "Very large user community (forum.ollama.com, Reddit, Discord)"
+        ],
+        "verdict": "neutral",
+        "sources": ["ollama-github"]
+      }
+    },
+    {
+      "id": "limitations",
+      "label": "Limitations & Trade-offs",
+      "icon": "⚠️",
+      "description": "What each tool sacrifices in exchange for its design goals. Honest assessment of pain points.",
+      "llamacpp": {
+        "summary": "Power comes at the cost of UX complexity. Requires compilation from source for best performance. No curated model registry. No automatic model lifecycle management. Steep learning curve for new users.",
+        "details": [
+          "No GUI — pure CLI and HTTP server",
+          "Compilation required for optimal performance (right CPU flags, GPU backend)",
+          "No curated model registry — user must find and download GGUF files from HuggingFace",
+          "No automatic model download/update management",
+          "Rolling release cadence means no 'stable' version guarantee",
+          "API surface evolves rapidly — breaking changes possible",
+          "Documentation scattered across README, wiki, and discussions",
+          "No built-in multi-model hot-swap (one model per server instance)",
+          "Requires understanding of quantization tradeoffs (Q4_K_M vs IQ3_XXS etc.)"
+        ],
+        "verdict": "neutral",
+        "sources": ["d-central-comparison", "llmbestpractices", "llamacpp-release-cycle"]
+      },
+      "ollama": {
+        "summary": "Convenience is traded for control. Cannot access llama.cpp internals. Model registry is proprietary and curated by Ollama Inc. License attribution controversy. Commercial entity interests may diverge from community needs.",
+        "details": [
+          "Intentionally hides llama.cpp flags — many knobs inaccessible to users",
+          "Model registry controlled by Ollama Inc. — not community-governed",
+          "Support for new architectures lags llama.cpp by days to weeks",
+          "Daemon architecture adds complexity (process management, port conflicts)",
+          "Cannot embed as a library in another binary",
+          "License attribution controversy: 411+ days to respond to compliance issue (#3185)",
+          "VC-backed company — future monetization or licensing changes possible",
+          "Limited Vulkan support history (years behind llama.cpp)",
+          "Modelfile customization is limited compared to raw llama.cpp flags",
+          "Windows ROCm support requires latest drivers — compatibility can be fragile"
+        ],
+        "verdict": "neutral",
+        "sources": ["ollama-license-issue", "d-central-comparison", "llmbestpractices"]
+      }
+    }
+  ],
+  "verdict": {
+    "summary": "llama.cpp is the foundational inference engine that powers the local LLM ecosystem — including Ollama itself. It provides maximum control, hardware coverage, and extensibility at the cost of user experience complexity. Ollama wraps llama.cpp in a polished developer experience optimized for ease of use: model management, auto-hardware detection, and ecosystem integration. The 'closed environment' criticism of Ollama is accurate in a specific sense: Ollama intentionally abstracts away llama.cpp's internals, limiting fine-grained control, and its model registry is controlled by a VC-backed company rather than the community.",
+    "use_llamacpp_when": [
+      "You need to embed inference directly inside your application (library mode)",
+      "You need exotic hardware backends (Vulkan, SYCL, Ascend, IBM Z, WebGPU)",
+      "You need fine-grained control over quantization, KV cache, RoPE scaling, or sampling",
+      "You need access to cutting-edge models on the day they release (before Ollama packages them)",
+      "You are building production inference at 50+ QPS and need to tune every parameter",
+      "You are targeting mobile, WASM/browser, or embedded Linux",
+      "You value not depending on a VC-backed company's model registry"
+    ],
+    "use_ollama_when": [
+      "You want a model running in under 5 minutes with zero configuration",
+      "You are building a prototype or local RAG application",
+      "Your team needs a shared LLM service on a local network",
+      "You want seamless integration with LangChain, LlamaIndex, Open WebUI, or similar frameworks",
+      "You are running a home lab and want models to auto-start as a service",
+      "Ease of model management (pull, list, delete) matters more than raw performance tuning",
+      "Your GPU is NVIDIA or Apple Silicon and you do not need exotic backends"
+    ],
+    "openness_verdict": "Both tools are MIT-licensed and open-source. However, 'openness' in practice differs significantly. llama.cpp exposes every internal mechanism; contributing a new model architecture or backend has a documented path. Ollama's openness is at the application layer — the source is visible, but the inference engine internals are hidden from users. The Ollama model registry is proprietary, and the license attribution controversy (GitHub issue #3185, unresolved for 411+ days) raised legitimate questions about Ollama's relationship with the open-source community it is built upon."
+  }
+}

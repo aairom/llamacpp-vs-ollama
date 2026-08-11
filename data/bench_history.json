@@ -1,0 +1,32 @@
+[
+  {
+    "timestamp": "2026-08-11T10:22:43Z",
+    "backend": "ollama",
+    "model": "llama3.2",
+    "prompt": "Say hello in one word.",
+    "n_predict": 16,
+    "metrics": {
+      "time_to_first_token_ms": 12408.37,
+      "total_time_ms": 12428.42,
+      "eval_time_ms": 19.96,
+      "prompt_eval_time_ms": 87.44,
+      "tokens_per_second": 150.28,
+      "tokens_generated": 3
+    }
+  },
+  {
+    "timestamp": "2026-08-11T10:32:52Z",
+    "backend": "ollama",
+    "model": "ibm/granite4:3b",
+    "prompt": "Why is the sky blue? Explain concisely.",
+    "n_predict": 128,
+    "metrics": {
+      "time_to_first_token_ms": 2028.24,
+      "total_time_ms": 3210.02,
+      "eval_time_ms": 1178.91,
+      "prompt_eval_time_ms": 101.44,
+      "tokens_per_second": 72.95,
+      "tokens_generated": 86
+    }
+  }
+]

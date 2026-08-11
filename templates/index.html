@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>llama.cpp vs Ollama — Visual Comparison</title>
+  <link rel="icon" href="/static/favicon.ico" type="image/x-icon" />
+  <link rel="stylesheet" href="/static/css/main.css" />
+</head>
+<body>
+  <!-- ===== HEADER ===== -->
+  <header class="site-header">
+    <div class="header-inner">
+      <div class="header-title">
+        <h1><span class="brand-llama">llama.cpp</span> <span class="vs-badge">vs</span> <span class="brand-ollama">Ollama</span></h1>
+        <p class="header-subtitle">A deep technical comparison — openness, architecture, and capabilities</p>
+      </div>
+      <div class="header-live" id="live-status">
+        <div class="live-dot loading"></div>
+        <span>Probing local installations…</span>
+      </div>
+    </div>
+  </header>
+
+  <!-- ===== LIVE PROBE BANNER ===== -->
+  <section class="live-banner" id="live-banner" style="display:none">
+    <div class="live-banner-inner">
+      <div class="live-card" id="lc-card">
+        <div class="live-card-header">
+          <span class="tool-badge badge-llamacpp">llama.cpp</span>
+          <span id="lc-status" class="status-tag"></span>
+        </div>
+        <div id="lc-body" class="live-card-body"></div>
+      </div>
+      <div class="live-card" id="ol-card">
+        <div class="live-card-header">
+          <span class="tool-badge badge-ollama">Ollama</span>
+          <span id="ol-status" class="status-tag"></span>
+        </div>
+        <div id="ol-body" class="live-card-body"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== MAIN LAYOUT ===== -->
+  <div class="app-layout">
+    <!-- SIDEBAR NAV -->
+    <nav class="sidebar" id="sidebar">
+      <div class="sidebar-section-title">Categories</div>
+      <ul class="nav-list" id="nav-list"></ul>
+      <div class="sidebar-section-title" style="margin-top:2rem">Jump to</div>
+      <ul class="nav-list">
+        <li><a href="#verdict-section" class="nav-item">⚖️ Verdict &amp; Summary</a></li>
+        <li><a href="#sources-section" class="nav-item">📚 Sources</a></li>
+        <li><a href="#bench-section" class="nav-item">🏎️ Benchmark Runner</a></li>
+      </ul>
+    </nav>
+
+    <!-- MAIN CONTENT -->
+    <main class="main-content" id="main-content">
+      <!-- Column headers -->
+      <div class="col-headers sticky-headers" id="col-headers">
+        <div class="col-header-spacer"></div>
+        <div class="col-header col-llamacpp">
+          <span class="col-icon">⚡</span>
+          <span>llama.cpp</span>
+          <a href="https://github.com/ggml-org/llama.cpp" target="_blank" rel="noopener" class="col-link">GitHub ↗</a>
+        </div>
+        <div class="col-header col-ollama">
+          <span class="col-icon">🦙</span>
+          <span>Ollama</span>
+          <a href="https://github.com/ollama/ollama" target="_blank" rel="noopener" class="col-link">GitHub ↗</a>
+        </div>
+      </div>
+
+      <!-- Categories will be rendered here -->
+      <div id="categories-container"></div>
+
+      <!-- ===== VERDICT SECTION ===== -->
+      <section class="verdict-section" id="verdict-section">
+        <h2 class="section-heading">⚖️ Verdict &amp; Summary</h2>
+        <div id="verdict-content"></div>
+        <div class="use-case-grid" id="use-case-grid"></div>
+        <div class="openness-box" id="openness-box"></div>
+      </section>
+
+      <!-- ===== SOURCES SECTION ===== -->
+      <section class="sources-section" id="sources-section">
+        <h2 class="section-heading">📚 Sources &amp; References</h2>
+        <div id="sources-list" class="sources-grid"></div>
+      </section>
+
+      <!-- ===== BENCHMARK SECTION ===== -->
+      <section class="bench-section" id="bench-section">
+        <h2 class="section-heading">🏎️ Benchmark Runner</h2>
+        <p class="bench-intro">Run a real inference benchmark against your locally installed Ollama or llama.cpp instance and compare metrics side-by-side.</p>
+
+        <div class="bench-layout">
+          <!-- ---- Form ---- -->
+          <div class="bench-form-card">
+            <div class="bench-form-row">
+              <label class="bench-label">Backend</label>
+              <div class="bench-radio-group">
+                <label class="bench-radio-label">
+                  <input type="radio" name="bench-backend" value="ollama" checked />
+                  <span class="bench-radio-btn badge-ollama-radio">🦙 Ollama</span>
+                </label>
+                <label class="bench-radio-label">
+                  <input type="radio" name="bench-backend" value="llamacpp" />
+                  <span class="bench-radio-btn badge-llama-radio">⚡ llama.cpp</span>
+                </label>
+              </div>
+            </div>
+
+            <div class="bench-form-row">
+              <label class="bench-label" for="bench-model">Model</label>
+              <input type="text" id="bench-model" class="bench-input"
+                placeholder="e.g. llama3.2 (Ollama) or /path/to/model.gguf (llama.cpp)"
+                autocomplete="off" spellcheck="false" />
+              <div class="bench-hint" id="bench-model-hint">Select a backend to see available models</div>
+            </div>
+
+            <div class="bench-form-row">
+              <label class="bench-label" for="bench-prompt">Prompt</label>
+              <textarea id="bench-prompt" class="bench-textarea" rows="3"
+                placeholder="Enter your test prompt…">Why is the sky blue? Explain concisely.</textarea>
+            </div>
+
+            <div class="bench-form-row bench-form-row-inline">
+              <label class="bench-label" for="bench-n-predict">Tokens to generate</label>
+              <input type="number" id="bench-n-predict" class="bench-input bench-input-sm"
+                value="128" min="1" max="4096" />
+            </div>
+
+            <button id="bench-run-btn" class="bench-run-btn">
+              <span id="bench-btn-text">▶ Run Benchmark</span>
+              <span id="bench-btn-spinner" style="display:none">⏳ Running…</span>
+            </button>
+
+            <div id="bench-error" class="bench-error" style="display:none"></div>
+          </div>
+
+          <!-- ---- Last result ---- -->
+          <div class="bench-result-card" id="bench-result-card" style="display:none">
+            <div class="bench-result-header" id="bench-result-header"></div>
+            <div class="bench-metrics-grid" id="bench-metrics-grid"></div>
+          </div>
+        </div>
+
+        <!-- ---- History table ---- -->
+        <div class="bench-history-wrap">
+          <div class="bench-history-title">
+            Recent Runs
+            <button id="bench-history-refresh" class="bench-history-btn" title="Refresh history">↻</button>
+          </div>
+          <div class="bench-table-wrap">
+            <table class="bench-table" id="bench-history-table">
+              <thead>
+                <tr>
+                  <th>Timestamp (UTC)</th>
+                  <th>Backend</th>
+                  <th>Model</th>
+                  <th>Tokens/s</th>
+                  <th>Total Time</th>
+                  <th>TTFT</th>
+                  <th>Tokens</th>
+                </tr>
+              </thead>
+              <tbody id="bench-history-body">
+                <tr><td colspan="7" class="bench-empty">No runs yet — run your first benchmark above.</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <!-- ===== DETAIL MODAL ===== -->
+  <div class="modal-overlay" id="modal-overlay" style="display:none">
+    <div class="modal-box" id="modal-box">
+      <button class="modal-close" id="modal-close">✕</button>
+      <div id="modal-content"></div>
+    </div>
+  </div>
+
+  <script src="/static/js/app.js"></script>
+</body>
+</html>

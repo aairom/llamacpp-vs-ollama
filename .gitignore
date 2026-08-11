@@ -1,0 +1,46 @@
+# ── Python ────────────────────────────────────────────────────────────────────
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+*.egg
+*.egg-info/
+dist/
+build/
+.eggs/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+
+# Virtual environments
+venv/
+.venv/
+env/
+.env
+
+# ── Project-specific ─────────────────────────────────────────────────────────
+# Runtime output (logs, PID)
+output/
+
+# Underscore-prefixed local folders (sources, images, docs caches, etc.)
+_*/
+
+# ── Binary / large model files ───────────────────────────────────────────────
+*.onnx
+*.onnx.data
+*.so
+*.tgz
+*.tar.gz
+*.zip
+*.dylib
+*.gguf
+
+# ── Node.js ───────────────────────────────────────────────────────────────────
+node_modules/
+
+# ── Bob / MCP tooling ─────────────────────────────────────────────────────────
+.playwright-mcp/
+
+# ── OS ────────────────────────────────────────────────────────────────────────
+.DS_Store
+Thumbs.db
