@@ -779,6 +779,33 @@ a:hover { text-decoration: underline; }
   margin-top: 0.2rem;
 }
 
+/* ---- Command display ---- */
+.bench-cmd-wrap {
+  margin-top: 1rem;
+  border-top: 1px solid var(--border);
+  padding-top: 0.85rem;
+}
+.bench-cmd-label {
+  font-size: 0.65rem;
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+  color: var(--text-muted);
+  margin-bottom: 0.4rem;
+}
+.bench-cmd-pre {
+  margin: 0;
+  padding: 0.65rem 0.9rem;
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  font-family: ui-monospace, "SFMono-Regular", Menlo, monospace;
+  font-size: 0.78rem;
+  color: var(--accent-llama);
+  white-space: pre-wrap;
+  word-break: break-all;
+  line-height: 1.55;
+}
+
 /* ---- History table ---- */
 .bench-history-wrap {
   margin-top: 0.5rem;

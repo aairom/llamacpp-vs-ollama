@@ -36,26 +36,17 @@ BENCH_TIMEOUT = int(os.environ.get("BENCH_TIMEOUT", 300))
 # ---------------------------------------------------------------------------
 # llama.cpp binary resolution
 # ---------------------------------------------------------------------------
-# Ordered list of candidate paths / names to try when looking for llama-cli.
+# Ordered list of candidate paths / names to try when looking for the llama binary.
 # The installed binary is the multi-command dispatcher `llama`.
 # Inference is run via:  llama cli -m <model> -p <prompt> -n <n_predict>
-# Legacy standalone `llama-cli` binaries (older builds) are still tried as fallback.
 _LLAMA_CLI_CANDIDATES = [
-    "llama",                                        # new dispatcher (llama.app install)
-    os.path.expanduser("~/.local/bin/llama"),       # explicit path first
-    "llama-cli",                                    # legacy standalone binary on PATH
-    os.path.expanduser("~/.local/bin/llama-cli"),
+    "llama",                                  # dispatcher on PATH
+    os.path.expanduser("~/.local/bin/llama"), # explicit ~/.local/bin
     "/usr/local/bin/llama",
-    "/usr/local/bin/llama-cli",
     "/opt/homebrew/bin/llama",
-    "/opt/homebrew/bin/llama-cli",
-    "./llama-cli",
-    "./llama.cpp/main",                             # legacy in-tree build
-    "./main",
 ]
 
-# Dispatcher binaries use subcommand style: `llama cli -m …`
-# Standalone binaries use direct flags:   `llama-cli -m …`
+# All supported binaries are dispatcher-style: `llama cli -m …`
 _LLAMA_DISPATCHER_NAMES = {"llama"}
 
 
@@ -195,22 +186,19 @@ def _bench_ollama(model: str, prompt: str, n_predict: int) -> dict:
         "prompt_eval_time_ms":    round(prompt_ms, 2) if prompt_ms is not None else None,
         "tokens_per_second":      round(tps, 2) if tps is not None else None,
         "tokens_generated":       total_tokens,
+        "command":                f'ollama run {model} "{prompt}"',
     }
 
 
 def _bench_llamacpp(model: str, prompt: str, n_predict: int) -> dict:
     """
-    Run one benchmark using the llama binary.
+    Run one benchmark using the llama dispatcher binary.
 
-    New dispatcher style (llama.app install):
-        llama cli -m <model> -p <prompt> -n <n_predict> --log-disable
-
-    Legacy standalone style (llama-cli):
-        llama-cli -m <model> -p <prompt> -n <n_predict> --log-disable
+        llama cli -m <model> -p <prompt> -n <n_predict> --log-disable -e
 
     Parses llama_print_timings lines from combined stdout/stderr.
     """
-    cli_path, is_dispatcher = _find_llama_cli()
+    cli_path, _ = _find_llama_cli()
     if cli_path is None:
         raise RuntimeError(
             "llama binary not found. Searched: " +
@@ -218,48 +206,48 @@ def _bench_llamacpp(model: str, prompt: str, n_predict: int) -> dict:
             ". Install from https://llama.app or https://github.com/ggml-org/llama.cpp/releases"
         )
 
-    # Build the command depending on binary style
-    if is_dispatcher:
-        # `llama cli -m model -p prompt -n n_predict …`
-        cmd = [
-            cli_path, "cli",
-            "-m", model,
-            "-p", prompt,
-            "-n", str(n_predict),
-            "--log-disable",
-            "-e",
-        ]
-    else:
-        # `llama-cli -m model -p prompt -n n_predict …`
-        cmd = [
-            cli_path,
-            "-m", model,
-            "-p", prompt,
-            "-n", str(n_predict),
-            "--log-disable",
-            "-e",
-        ]
+    cmd = [
+        cli_path, "cli",
+        "-m", model,
+        "-p", prompt,
+        "-n", str(n_predict),
+        "--no-conversation",   # disable interactive REPL — process exits after one generation
+        "--log-disable",
+        "-e",
+    ]
 
     t_start = time.monotonic()
     try:
-        proc = subprocess.run(
+        # Use Popen + communicate() instead of subprocess.run(capture_output=True).
+        # subprocess.run with capture_output buffers stdout and stderr in OS pipes;
+        # if the llama process writes enough output (verbose logs, token stream) the
+        # pipe buffer fills, the process blocks on write, and run() deadlocks waiting
+        # for the process to exit — a hang that can outlast BENCH_TIMEOUT.
+        # communicate() drains both pipes concurrently in background threads, so the
+        # process is never blocked on a full pipe.
+        proc = subprocess.Popen(
             cmd,
-            capture_output=True,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            stdin=subprocess.DEVNULL,
             text=True,
-            timeout=BENCH_TIMEOUT,
         )
-    except subprocess.TimeoutExpired:
-        raise RuntimeError(
-            f"llama timed out after {BENCH_TIMEOUT}s. "
-            "Try reducing n_predict or using a smaller/more quantized model."
-        )
+        try:
+            stdout, stderr = proc.communicate(timeout=BENCH_TIMEOUT)
+        except subprocess.TimeoutExpired:
+            proc.kill()
+            proc.communicate()  # drain pipes after kill to avoid ResourceWarning
+            raise RuntimeError(
+                f"llama timed out after {BENCH_TIMEOUT}s. "
+                "Try reducing n_predict or using a smaller/more quantized model."
+            )
     except FileNotFoundError:
         raise RuntimeError(f"llama binary not executable at resolved path: {cli_path}")
 
     t_end = time.monotonic()
     total_wall_ms = (t_end - t_start) * 1000
 
-    combined = proc.stdout + "\n" + proc.stderr
+    combined = stdout + "\n" + stderr
 
     # --- Parse llama_print_timings lines ---
     def _parse_ms(pattern: str) -> float | None:
@@ -293,10 +281,11 @@ def _bench_llamacpp(model: str, prompt: str, n_predict: int) -> dict:
     total_tokens = (eval_tokens or 0) + (prompt_tokens or 0)
 
     # If the process failed with no timing output, surface stderr
-    if proc.returncode != 0 and eval_ms is None:
-        stderr_snippet = proc.stderr[-800:].strip() if proc.stderr else "(no stderr)"
+    returncode = proc.returncode
+    if returncode != 0 and eval_ms is None:
+        stderr_snippet = stderr[-800:].strip() if stderr else "(no stderr)"
         raise RuntimeError(
-            f"llama exited with code {proc.returncode}.\n"
+            f"llama exited with code {returncode}.\n"
             f"Last stderr:\n{stderr_snippet}"
         )
 
@@ -311,6 +300,7 @@ def _bench_llamacpp(model: str, prompt: str, n_predict: int) -> dict:
         "prompt_tokens":          prompt_tokens,
         "load_time_ms":           round(load_ms, 2) if load_ms is not None else None,
         "wall_time_ms":           round(total_wall_ms, 2),
+        "command":                " ".join(cmd),
     }
 
 

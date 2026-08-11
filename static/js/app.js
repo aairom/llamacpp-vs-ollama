@@ -639,6 +639,15 @@ function benchRenderResult(data) {
         : `<div class="bench-metric-na">—</div>`
       }
     </div>`).join("");
+
+  // Command line display
+  const cmdWrap = document.getElementById("bench-cmd-wrap");
+  if (m.command) {
+    cmdWrap.style.display = "";
+    document.getElementById("bench-cmd-text").textContent = m.command;
+  } else {
+    cmdWrap.style.display = "none";
+  }
 }
 
 async function benchLoadHistory() {

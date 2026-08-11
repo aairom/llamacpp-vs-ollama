@@ -21,7 +21,7 @@ fi
 LOG_FILE="$ROOT_DIR/output/app.log"
 PID_FILE="$ROOT_DIR/output/app.pid"
 VENV_DIR="$ROOT_DIR/venv"
-PORT="${PORT:-8088}"
+PORT="${PORT:-8080}"
 
 # Create output directory if it doesn't exist
 mkdir -p "$ROOT_DIR/output"
