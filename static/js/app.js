@@ -508,20 +508,35 @@ async function benchRun() {
 
   // UI: running state
   bench.running = true;
-  const btn       = document.getElementById("bench-run-btn");
-  const btnText   = document.getElementById("bench-btn-text");
+  const btn        = document.getElementById("bench-run-btn");
+  const btnText    = document.getElementById("bench-btn-text");
   const btnSpinner = document.getElementById("bench-btn-spinner");
   btn.disabled = true;
-  btnText.style.display   = "none";
+  btnText.style.display    = "none";
   btnSpinner.style.display = "";
   resultCard.style.display = "none";
+
+  // Show a live elapsed-time ticker so the user knows the run is progressing,
+  // not frozen.  llama.cpp on CPU can legitimately take 60-180 s.
+  let elapsed = 0;
+  const ticker = setInterval(() => {
+    elapsed += 1;
+    btnSpinner.textContent = `⏳ Running… ${elapsed}s`;
+  }, 1000);
+
+  // Hard client-side timeout matches BENCH_TIMEOUT + 10 s buffer.
+  const FETCH_TIMEOUT_MS = 310_000;
+  const controller = new AbortController();
+  const timeoutId  = setTimeout(() => controller.abort(), FETCH_TIMEOUT_MS);
 
   try {
     const res = await fetch("/api/bench", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ backend, model, prompt, n_predict }),
+      signal: controller.signal,
     });
+    clearTimeout(timeoutId);
     const data = await res.json();
 
     if (!res.ok || data.error) {
@@ -532,12 +547,22 @@ async function benchRun() {
     benchRenderResult(data);
     benchLoadHistory();     // refresh history table
   } catch (err) {
-    benchShowError(`Network error: ${err.message}`);
+    clearTimeout(timeoutId);
+    if (err.name === "AbortError") {
+      benchShowError(
+        `Benchmark timed out after ${FETCH_TIMEOUT_MS / 1000}s. ` +
+        "Try a smaller model, fewer tokens, or check the server log."
+      );
+    } else {
+      benchShowError(`Network error: ${err.message}`);
+    }
   } finally {
+    clearInterval(ticker);
     bench.running = false;
     btn.disabled = false;
-    btnText.style.display   = "";
+    btnText.style.display    = "";
     btnSpinner.style.display = "none";
+    btnSpinner.textContent   = ""; // reset ticker text
   }
 }
 

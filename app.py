@@ -610,4 +610,8 @@ if __name__ == "__main__":
     debug = os.environ.get("DEBUG", "false").lower() == "true"
     print(f"\n  llama.cpp vs Ollama Comparison App")
     print(f"  ➜  http://localhost:{port}\n")
-    app.run(host="0.0.0.0", port=port, debug=debug)
+    # threaded=True is essential: the benchmark endpoint blocks for up to
+    # BENCH_TIMEOUT seconds while the llama subprocess runs. Without threading,
+    # the server handles only one request at a time and the browser appears to
+    # hang with no feedback until inference finishes (or times out).
+    app.run(host="0.0.0.0", port=port, debug=debug, threaded=True)
