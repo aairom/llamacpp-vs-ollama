@@ -27,19 +27,19 @@ flowchart TD
     subgraph Local["Local Machine"]
         O[(data/comparison.json)]
         P[(data/bench_history.json)]
-        Q[llama-cli binary\nPATH / ~/.local/bin\n/opt/homebrew/bin / /usr/local/bin]
-        R[Ollama daemon\nlocalhost:11434]
-        S[GGUF files\n~/.ollama/blobs\n~/.cache/huggingface/hub\n~/Library/Caches/llama.cpp (macOS)\n~/.cache/llama.cpp (Linux)\n~/models, ~/Downloads]
+        Q["llama-cli binary\nPATH / ~/.local/bin\n/opt/homebrew/bin / /usr/local/bin"]
+        R["Ollama daemon\nlocalhost:11434"]
+        S["GGUF files\n~/.ollama/blobs\n~/.cache/huggingface/hub\n~/Library/Caches/llama.cpp (macOS)\n~/.cache/llama.cpp (Linux)\n~/models, ~/Downloads"]
     end
 
     Browser -->|HTTP| Flask
     H -->|render_template| Browser
     I -->|reads JSON| O
     J -->|subprocess which / --version + extra paths| Q
-    K -->|walks filesystem (4 source types)| S
-    L -->|subprocess ollama --version\nHTTP /api/tags| R
+    K -->|"walks filesystem (4 source types)"| S
+    L -->|"subprocess ollama --version\nHTTP /api/tags"| R
     M -->|subprocess llama-cli| Q
-    M -->|HTTP streaming /api/generate| R
+    M -->|"HTTP streaming /api/generate"| R
     M -->|reads/writes| P
     N -->|reads| P
 ```
