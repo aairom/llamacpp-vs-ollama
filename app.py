@@ -3,14 +3,24 @@ llama.cpp vs Ollama — Visual Comparison App
 Flask backend: serves static assets, comparison data, live probe, and benchmark endpoints.
 """
 
+# Load .env before any os.environ access so BENCH_TIMEOUT, PORT, DEBUG are
+# honoured from the project's .env file rather than always using defaults.
+try:
+    from dotenv import load_dotenv
+    load_dotenv()
+except ImportError:
+    pass  # python-dotenv not installed; fall back to environment variables
+
 import json
 import os
 import re
 import subprocess
 import sys
+import threading
 import time
 import urllib.request
 import urllib.error
+import uuid
 from datetime import datetime, timezone
 
 import requests
@@ -31,7 +41,20 @@ BENCH_HISTORY_MAX = 50
 
 # Default inference timeout (seconds) — can be overridden via BENCH_TIMEOUT env var.
 # 300 s gives enough headroom for model load + generation on CPU-only machines.
-BENCH_TIMEOUT = int(os.environ.get("BENCH_TIMEOUT", 300))
+BENCH_TIMEOUT = int(os.getenv("BENCH_TIMEOUT", 300))
+
+# ---------------------------------------------------------------------------
+# Async job store
+# ---------------------------------------------------------------------------
+# Each benchmark runs in a background thread so the HTTP request returns
+# immediately with a job_id.  The client polls GET /api/bench/job/<job_id>.
+#
+# Job states:  "running" | "done" | "error"
+# Entries are kept in memory only; they are discarded on server restart.
+# Completed jobs are pruned to the last JOB_STORE_MAX entries.
+JOB_STORE_MAX = 100
+_jobs: dict = {}          # job_id → {"status", "result"?, "error"?}
+_jobs_lock = threading.Lock()
 
 # ---------------------------------------------------------------------------
 # llama.cpp binary resolution
@@ -529,10 +552,48 @@ def probe_llamacpp():
 # Benchmark endpoints
 # ---------------------------------------------------------------------------
 
+def _run_bench_job(job_id: str, backend: str, model: str, prompt: str, n_predict: int) -> None:
+    """
+    Worker executed in a background thread for each benchmark job.
+    Writes the outcome into _jobs[job_id] when complete.
+    """
+    try:
+        if backend == "ollama":
+            metrics = _bench_ollama(model, prompt, n_predict)
+        else:
+            metrics = _bench_llamacpp(model, prompt, n_predict)
+
+        # Full prompt kept in the live result for display; truncated only for storage.
+        result = {
+            "timestamp": datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),
+            "backend":   backend,
+            "model":     model,
+            "prompt":    prompt,
+            "n_predict": n_predict,
+            "metrics":   metrics,
+        }
+        _append_result({**result, "prompt": prompt[:200]})  # persist truncated
+
+        with _jobs_lock:
+            _jobs[job_id] = {"status": "done", "result": result}
+            # Prune oldest completed jobs beyond JOB_STORE_MAX
+            done_ids = [k for k, v in _jobs.items() if v["status"] != "running"]
+            for old_id in done_ids[:-JOB_STORE_MAX]:
+                del _jobs[old_id]
+
+    except RuntimeError as exc:
+        with _jobs_lock:
+            _jobs[job_id] = {"status": "error", "error": str(exc)}
+    except Exception as exc:
+        with _jobs_lock:
+            _jobs[job_id] = {"status": "error", "error": f"Unexpected error: {exc}"}
+
+
 @app.route("/api/bench", methods=["POST"])
 def api_bench():
     """
-    Run a single benchmark and return unified metrics.
+    Start a benchmark job and return a job_id immediately (HTTP 202).
+    The caller polls GET /api/bench/job/<job_id> for the result.
 
     Request JSON body:
         backend   : "ollama" | "llamacpp"  (required)
@@ -560,28 +621,39 @@ def api_bench():
     if errors:
         return jsonify({"error": " ".join(errors)}), 400
 
-    # --- Run ---
-    try:
-        if backend == "ollama":
-            metrics = _bench_ollama(model, prompt, n_predict)
-        else:
-            metrics = _bench_llamacpp(model, prompt, n_predict)
-    except RuntimeError as exc:
-        return jsonify({"error": str(exc)}), 500
-    except Exception as exc:
-        return jsonify({"error": f"Unexpected error: {exc}"}), 500
+    # Fire background thread, return job_id immediately so the browser
+    # connection is not held open for the full inference duration.
+    job_id = str(uuid.uuid4())
+    with _jobs_lock:
+        _jobs[job_id] = {"status": "running"}
 
-    result = {
-        "timestamp": datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),
-        "backend":   backend,
-        "model":     model,
-        "prompt":    prompt[:200],   # truncate for storage
-        "n_predict": n_predict,
-        "metrics":   metrics,
-    }
+    t = threading.Thread(
+        target=_run_bench_job,
+        args=(job_id, backend, model, prompt, n_predict),
+        daemon=True,
+    )
+    t.start()
 
-    _append_result(result)
-    return jsonify(result), 200
+    # Return the server-side timeout so the client can align its polling ceiling.
+    return jsonify({"job_id": job_id, "timeout_s": BENCH_TIMEOUT}), 202
+
+
+@app.route("/api/bench/job/<job_id>", methods=["GET"])
+def api_bench_job(job_id: str):
+    """
+    Poll the status of a running or completed benchmark job.
+
+    Returns one of:
+        {"status": "running"}
+        {"status": "done",  "result": { ... }}
+        {"status": "error", "error":  "..."}
+    404 if the job_id is not recognised.
+    """
+    with _jobs_lock:
+        job = _jobs.get(job_id)
+    if job is None:
+        return jsonify({"error": "Unknown job_id"}), 404
+    return jsonify(job), 200
 
 
 @app.route("/api/bench/history", methods=["GET"])
@@ -600,8 +672,10 @@ if __name__ == "__main__":
     debug = os.environ.get("DEBUG", "false").lower() == "true"
     print(f"\n  llama.cpp vs Ollama Comparison App")
     print(f"  ➜  http://localhost:{port}\n")
-    # threaded=True is essential: the benchmark endpoint blocks for up to
-    # BENCH_TIMEOUT seconds while the llama subprocess runs. Without threading,
-    # the server handles only one request at a time and the browser appears to
-    # hang with no feedback until inference finishes (or times out).
-    app.run(host="0.0.0.0", port=port, debug=debug, threaded=True)
+    # threaded=True: each request gets its own thread so the long-running
+    # /api/bench/job/<id> poll never blocks probe or data endpoints.
+    # use_reloader=False: Werkzeug's file-watcher spawns a watchdog subprocess
+    # that loops endlessly printing restart messages to the terminal — disabling
+    # it prevents that console spam regardless of the DEBUG setting.
+    app.run(host="0.0.0.0", port=port, debug=debug,
+            threaded=True, use_reloader=False)

@@ -28,5 +28,21 @@
       "tokens_per_second": 72.95,
       "tokens_generated": 86
     }
+  },
+  {
+    "timestamp": "2026-08-11T16:42:30Z",
+    "backend": "ollama",
+    "model": "ibm/granite4:3b",
+    "prompt": "Why is the sky blue? Explain concisely.",
+    "n_predict": 128,
+    "metrics": {
+      "time_to_first_token_ms": 11995.71,
+      "total_time_ms": 13230.61,
+      "eval_time_ms": 1233.93,
+      "prompt_eval_time_ms": 263.52,
+      "tokens_per_second": 59.16,
+      "tokens_generated": 73,
+      "command": "ollama run ibm/granite4:3b \"Why is the sky blue? Explain concisely.\""
+    }
   }
 ]

@@ -805,6 +805,9 @@ a:hover { text-decoration: underline; }
   word-break: break-all;
   line-height: 1.55;
 }
+.bench-prompt-pre {
+  color: var(--text);      /* neutral white — prompt text, not a command */
+}
 
 /* ---- History table ---- */
 .bench-history-wrap {

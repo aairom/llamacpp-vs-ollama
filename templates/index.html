@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>llama.cpp vs Ollama — Visual Comparison</title>
   <link rel="icon" href="/static/favicon.ico" type="image/x-icon" />
-  <link rel="stylesheet" href="/static/css/main.css" />
+  <link rel="stylesheet" href="/static/css/main.css?v=4" />
 </head>
 <body>
   <!-- ===== HEADER ===== -->
@@ -148,6 +148,10 @@
               <div class="bench-cmd-label">Command</div>
               <pre class="bench-cmd-pre" id="bench-cmd-text"></pre>
             </div>
+            <div class="bench-cmd-wrap" id="bench-prompt-wrap" style="display:none">
+              <div class="bench-cmd-label">Prompt</div>
+              <pre class="bench-cmd-pre bench-prompt-pre" id="bench-prompt-display"></pre>
+            </div>
           </div>
         </div>
 
@@ -188,6 +192,6 @@
     </div>
   </div>
 
-  <script src="/static/js/app.js"></script>
+  <script src="/static/js/app.js?v=5"></script>
 </body>
 </html>

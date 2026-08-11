@@ -516,53 +516,78 @@ async function benchRun() {
   btnSpinner.style.display = "";
   resultCard.style.display = "none";
 
-  // Show a live elapsed-time ticker so the user knows the run is progressing,
-  // not frozen.  llama.cpp on CPU can legitimately take 60-180 s.
+  // Elapsed-time ticker — updates every second while polling.
   let elapsed = 0;
   const ticker = setInterval(() => {
     elapsed += 1;
     btnSpinner.textContent = `⏳ Running… ${elapsed}s`;
   }, 1000);
 
-  // Hard client-side timeout matches BENCH_TIMEOUT + 10 s buffer.
-  const FETCH_TIMEOUT_MS = 310_000;
-  const controller = new AbortController();
-  const timeoutId  = setTimeout(() => controller.abort(), FETCH_TIMEOUT_MS);
-
   try {
-    const res = await fetch("/api/bench", {
+    // Step 1: POST to start the job — returns immediately with a job_id.
+    const startRes = await fetch("/api/bench", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ backend, model, prompt, n_predict }),
-      signal: controller.signal,
     });
-    clearTimeout(timeoutId);
-    const data = await res.json();
+    const startData = await startRes.json();
 
-    if (!res.ok || data.error) {
-      benchShowError(data.error || `Server error ${res.status}`);
+    if (!startRes.ok || startData.error) {
+      benchShowError(startData.error || `Server error ${startRes.status}`);
       return;
     }
 
-    benchRenderResult(data);
-    benchLoadHistory();     // refresh history table
-  } catch (err) {
-    clearTimeout(timeoutId);
-    if (err.name === "AbortError") {
-      benchShowError(
-        `Benchmark timed out after ${FETCH_TIMEOUT_MS / 1000}s. ` +
-        "Try a smaller model, fewer tokens, or check the server log."
-      );
-    } else {
-      benchShowError(`Network error: ${err.message}`);
+    const jobId    = startData.job_id;
+    // Use the server's configured timeout + 20 s buffer as the polling ceiling
+    // so a custom BENCH_TIMEOUT in .env is honoured on both sides.
+    // Fall back to 310 s if the field is absent (old cached server response).
+    const MAX_POLL_S = (startData.timeout_s || 300) + 20;
+
+    // Step 2: Poll GET /api/bench/job/<job_id> every 2 s until done or error.
+    // The while condition on `elapsed` provides a hard ceiling — the loop
+    // cannot run forever even if the server never returns a terminal status.
+    while (elapsed < MAX_POLL_S) {
+      await new Promise(resolve => setTimeout(resolve, 2000));
+
+      let job;
+      try {
+        const pollRes = await fetch(`/api/bench/job/${jobId}`);
+        if (!pollRes.ok) {
+          benchShowError(`Polling error ${pollRes.status}`);
+          return;
+        }
+        job = await pollRes.json();
+      } catch (pollErr) {
+        benchShowError(`Polling network error: ${pollErr.message}`);
+        return;
+      }
+
+      if (job.status === "done") {
+        benchRenderResult(job.result);
+        benchLoadHistory();
+        return;
+      }
+      if (job.status === "error") {
+        benchShowError(job.error || "Benchmark failed");
+        return;
+      }
+      // status === "running" — keep polling
     }
+
+    // Exceeded ceiling without a terminal status
+    benchShowError(
+      `Benchmark did not complete within ${MAX_POLL_S}s. ` +
+      "Try a smaller model, fewer tokens, or check the server log."
+    );
+  } catch (err) {
+    benchShowError(`Network error: ${err.message}`);
   } finally {
     clearInterval(ticker);
     bench.running = false;
     btn.disabled = false;
     btnText.style.display    = "";
     btnSpinner.style.display = "none";
-    btnSpinner.textContent   = ""; // reset ticker text
+    btnSpinner.textContent   = "";
   }
 }
 
@@ -577,12 +602,11 @@ function benchRenderResult(data) {
   const card = document.getElementById("bench-result-card");
   card.style.display = "";
 
-  // Header
+  // Header — backend, model, timestamp, token count
   document.getElementById("bench-result-header").innerHTML =
     `<strong>${esc(data.backend === "ollama" ? "🦙 Ollama" : "⚡ llama.cpp")}</strong> · ` +
     `<strong>${esc(data.model)}</strong><br>` +
-    `<span style="font-size:0.72rem">${esc(data.timestamp)} · ${esc(String(data.n_predict))} tokens requested · ` +
-    `Prompt: "${esc((data.prompt || "").slice(0, 80))}${(data.prompt || "").length > 80 ? "…" : ""}"</span>`;
+    `<span style="font-size:0.72rem">${esc(data.timestamp)} · ${esc(String(data.n_predict))} tokens requested</span>`;
 
   // Metrics tiles
   const metrics = [
@@ -640,13 +664,22 @@ function benchRenderResult(data) {
       }
     </div>`).join("");
 
-  // Command line display
+  // Command block — exact process invocation
   const cmdWrap = document.getElementById("bench-cmd-wrap");
   if (m.command) {
     cmdWrap.style.display = "";
     document.getElementById("bench-cmd-text").textContent = m.command;
   } else {
     cmdWrap.style.display = "none";
+  }
+
+  // Prompt block — full prompt text sent to the model
+  const promptWrap = document.getElementById("bench-prompt-wrap");
+  if (data.prompt) {
+    promptWrap.style.display = "";
+    document.getElementById("bench-prompt-display").textContent = data.prompt;
+  } else {
+    promptWrap.style.display = "none";
   }
 }
 
