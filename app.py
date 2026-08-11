@@ -234,7 +234,10 @@ def _bench_llamacpp(model: str, prompt: str, n_predict: int) -> dict:
         "-m", model,
         "-p", prompt,
         "-n", str(n_predict),
-        "--no-conversation",   # disable interactive REPL — process exits after one generation
+        "--no-conversation",   # disable interactive REPL
+        "--single-turn",       # guarantee one-shot exit even on reasoning/thinking models
+        "--reasoning", "off",  # suppress <think> block on Qwen3/DeepSeek-style models;
+                               # ignored harmlessly by non-reasoning models
         "--log-disable",
         "-e",
     ]
@@ -285,6 +288,11 @@ def _bench_llamacpp(model: str, prompt: str, n_predict: int) -> dict:
         m = re.search(pattern, combined)
         return int(m.group(1)) if m else None
 
+    # ── Format A: classic llama_print_timings block (older builds) ────────────
+    #   load time     =   123.45 ms
+    #   prompt eval time =   12.34 ms /  10 tokens (  1.23 ms per token, 123.45 tokens per second)
+    #   eval time     =  456.78 ms /  64 runs   (  7.13 ms per token,  89.77 tokens per second)
+    #   total time    =  580.12 ms /  74 tokens
     load_ms        = _parse_ms(r"load time\s*=\s*([\d.]+)\s*ms")
     prompt_ms      = _parse_ms(r"prompt eval time\s*=\s*([\d.]+)\s*ms")
     eval_ms        = _parse_ms(r"(?<!prompt )eval time\s*=\s*([\d.]+)\s*ms")
@@ -294,7 +302,18 @@ def _bench_llamacpp(model: str, prompt: str, n_predict: int) -> dict:
     eval_tokens    = _parse_tokens(r"eval time\s*=.*?/\s*(\d+)\s*runs")
     prompt_tokens  = _parse_tokens(r"prompt eval time\s*=.*?/\s*(\d+)\s*tokens")
 
-    # TTFT ≈ load time + prompt eval time (time before first generated token)
+    # ── Format B: new dispatcher inline speed line (build b10217+) ───────────
+    #   [ Prompt: 373.0 t/s | Generation: 88.3 t/s ]
+    if eval_tps is None:
+        eval_tps   = _parse_tps(r"Generation:\s*([\d.]+)\s*t/s")
+    if prompt_tps is None:
+        prompt_tps = _parse_tps(r"Prompt:\s*([\d.]+)\s*t/s")
+    # Derive eval_ms from wall time and generation TPS when the timing block is absent
+    if eval_ms is None and eval_tps is not None and eval_tps > 0:
+        # eval_tokens unknown from new format; use n_predict as upper bound
+        eval_ms = (n_predict / eval_tps) * 1000
+
+    # ── TTFT ≈ load time + prompt eval time ───────────────────────────────────
     ttft_ms: float | None = None
     if load_ms is not None and prompt_ms is not None:
         ttft_ms = load_ms + prompt_ms
@@ -303,9 +322,9 @@ def _bench_llamacpp(model: str, prompt: str, n_predict: int) -> dict:
 
     total_tokens = (eval_tokens or 0) + (prompt_tokens or 0)
 
-    # If the process failed with no timing output, surface stderr
+    # If the process failed with no timing output at all, surface stderr
     returncode = proc.returncode
-    if returncode != 0 and eval_ms is None:
+    if returncode != 0 and eval_ms is None and eval_tps is None:
         stderr_snippet = stderr[-800:].strip() if stderr else "(no stderr)"
         raise RuntimeError(
             f"llama exited with code {returncode}.\n"
