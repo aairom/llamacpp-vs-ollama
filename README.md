@@ -35,7 +35,7 @@ flowchart TD
 - **Overall score summary** — Editorial scores with animated bar charts
 - **Live local probe** — Detects installed llama.cpp binaries and Ollama version/models at runtime
 - **GGUF model discovery** — Finds models from the Ollama blob store, HuggingFace Hub cache, llama.cpp download cache (`~/Library/Caches/llama.cpp` on macOS, `~/.cache/llama.cpp` on Linux), and common local directories (`~/models`, `~/Downloads`, etc.)
-- **Benchmark runner** — Run timed inference on Ollama or llama-cli and compare tokens/second, TTFT, and eval times; results persist to `data/bench_history.json`
+- **Benchmark runner** — Run timed inference on Ollama or llama-cli and compare tokens/second, TTFT, and eval times; results persist to `data/bench_history.json` (see [Benchmarking Feature — Technical Reference](Docs/Benchmarking.md))
 - **Source panel** — All references with clickable links
 - **Sticky column headers + sidebar scrollspy** — Easy navigation
 - **Dark-mode, responsive design**
@@ -154,6 +154,8 @@ llamacpp-vs-ollama/
   "n_predict": 128
 }
 ```
+
+For full parameter documentation, async job lifecycle, result interpretation, and sampling parameter analysis, see the [Benchmarking Feature — Technical Reference](Docs/Benchmarking.md).
 
 ---
 

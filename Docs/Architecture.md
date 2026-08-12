@@ -101,6 +101,8 @@ sequenceDiagram
 
 ## Key Metrics Captured per Benchmark Run
 
+> For full parameter documentation, result interpretation, usage examples, and the technical analysis of sampling parameters, see the [Benchmarking Feature — Technical Reference](Benchmarking.md).
+
 | Metric | Ollama | llama-cli |
 |---|---|---|
 | `time_to_first_token_ms` | Wall clock to first non-empty chunk | `load_time + prompt_eval_time` |

@@ -99,6 +99,8 @@ The **Benchmark Runner** section (accessible via the sidebar) lets you run timed
 
 > Benchmark results persist across restarts. Up to **50 runs** are stored in `data/bench_history.json`; the **History** view in the UI displays the most recent **10**.
 
+For a complete reference — including all parameters, metric definitions, result interpretation, and a technical analysis of sampling parameters — see the [Benchmarking Feature — Technical Reference](Benchmarking.md).
+
 ---
 
 ## Updating comparison data
